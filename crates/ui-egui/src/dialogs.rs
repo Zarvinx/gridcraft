@@ -892,7 +892,7 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
         _ => 380.0,
     };
     let window = egui::Window::new(d.title.clone())
-        .id(egui::Id::new("dialog").with(&d.name))
+        .id(app.widget_id("dialog").with(&d.name))
         .collapsible(false)
         .resizable(false)
         .default_width(width)

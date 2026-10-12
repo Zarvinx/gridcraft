@@ -17,7 +17,8 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
     }
     let Some(pane) = app.grid.pane.clone().or_else(|| app.session.comments_pane.then(|| "comments".to_string())) else { return };
     let t = Tokens::get(ui.ctx());
-    egui::Panel::right("task_pane").default_size(300.0).resizable(true).frame(egui::Frame::NONE.fill(t.ribbon).inner_margin(10)).show(ui, |ui| {
+    let panel_id = app.widget_id("task_pane");
+    egui::Panel::right(panel_id).default_size(300.0).resizable(true).frame(egui::Frame::NONE.fill(t.ribbon).inner_margin(10)).show(ui, |ui| {
         ui.horizontal(|ui| {
             let title = match pane.as_str() {
                 "comments" => "Comments",
@@ -76,7 +77,7 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
                 for (a, txt) in &c.replies {
                     ui.label(egui::RichText::new(format!("↳ {a}: {txt}")).color(Color32::from_gray(60)));
                 }
-                let key = egui::Id::new(("reply", &cell));
+                let key = app.widget_id(("reply", &cell));
                 let mut draft: String = ui.ctx().data_mut(|m| m.get_temp(key)).unwrap_or_default();
                 ui.horizontal(|ui| {
                     let r = ui.add(egui::TextEdit::singleline(&mut draft).hint_text("Reply…").desired_width(ui.available_width() - 120.0));
@@ -163,7 +164,7 @@ fn format_chart(app: &mut SheetApp, ui: &mut Ui) {
     };
     let theme = app.session.active().map(|d| d.wb.theme.clone()).unwrap_or_default();
     ui.collapsing("Chart Title", |ui| {
-        let field = egui::Id::new(("gridcraft.chart_title", id));
+        let field = app.widget_id(("gridcraft.chart_title", id));
         if let Some(title) = crate::widgets::committed_text(ui, field, chart.title.as_deref().unwrap_or(""), None) {
             app.run_or_alert("chart.set", json!({"chart": id, "title": title}));
         }
@@ -208,14 +209,14 @@ fn format_chart(app: &mut SheetApp, ui: &mut Ui) {
         }
         ui.horizontal(|ui| {
             ui.label("Horizontal axis title:");
-            let field = egui::Id::new(("gridcraft.chart_x_title", id));
+            let field = app.widget_id(("gridcraft.chart_x_title", id));
             if let Some(xt) = crate::widgets::committed_text(ui, field, chart.x_title.as_deref().unwrap_or(""), None) {
                 app.run_or_alert("chart.set", json!({"chart": id, "xTitle": if xt.is_empty() { Json::Null } else { json!(xt) }}));
             }
         });
         ui.horizontal(|ui| {
             ui.label("Vertical axis title:");
-            let field = egui::Id::new(("gridcraft.chart_y_title", id));
+            let field = app.widget_id(("gridcraft.chart_y_title", id));
             if let Some(yt) = crate::widgets::committed_text(ui, field, chart.y_title.as_deref().unwrap_or(""), None) {
                 app.run_or_alert("chart.set", json!({"chart": id, "yTitle": if yt.is_empty() { Json::Null } else { json!(yt) }}));
             }
@@ -262,7 +263,7 @@ fn format_chart(app: &mut SheetApp, ui: &mut Ui) {
     });
     ui.collapsing("Size", |ui| {
         // Keep the value being typed or dragged between frames; reloading it from the chart every frame threw the edit away.
-        let draft = egui::Id::new(("gridcraft.chart_size_draft", id));
+        let draft = app.widget_id(("gridcraft.chart_size_draft", id));
         let (mut w, mut h) = ui.data_mut(|d| d.get_temp::<(f32, f32)>(draft)).unwrap_or((chart.anchor.width, chart.anchor.height));
         let a = ui.add(egui::DragValue::new(&mut w).prefix("Width ").range(40.0..=4000.0));
         let b = ui.add(egui::DragValue::new(&mut h).prefix("Height ").range(40.0..=4000.0));
